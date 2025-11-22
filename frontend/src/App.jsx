@@ -13,29 +13,25 @@ import { checkAuthStatusThunk } from "./slice/authSlice";
 
 function App() {
   const dispatch = useDispatch();
-  const { authChecked } = useSelector((state) => state.auth);
   const [appLoading, setAppLoading] = useState(true);
 
+
   useEffect(() => {
-    const initializeAuth = async () => {
-      await dispatch(checkAuthStatusThunk());
-      setAppLoading(false);
-    };
-    
-    initializeAuth();
+    // Check auth status when app loads
+    dispatch(checkAuthStatusThunk());
   }, [dispatch]);
 
   // Show loading until auth check is complete
-  if (appLoading) {
-    return (
-      <div className="bg-[#0A0A0F] text-white min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00fff0] mx-auto mb-4"></div>
-          <p className="text-white/60">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  // if (appLoading) {
+  //   return (
+  //     <div className="bg-[#0A0A0F] text-white min-h-screen flex items-center justify-center">
+  //       <div className="text-center">
+  //         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00fff0] mx-auto mb-4"></div>
+  //         <p className="text-white/60">Loading...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="bg-[#0A0A0F] text-white min-h-screen flex flex-col font-inter">

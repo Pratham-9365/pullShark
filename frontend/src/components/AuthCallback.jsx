@@ -1,32 +1,49 @@
 import { useEffect } from "react";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { exchangeCodeThunk } from "../slice/authSlice";
 
 export default function AuthCallback() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { loading, error, authenticated } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-
+    const code = searchParams.get("code");
+    
     if (code) {
+      console.log("Exchanging code:", code);
       dispatch(exchangeCodeThunk(code))
         .unwrap()
-        .then(() => navigate("/repo"))
-        .catch(() => navigate("/login"));
+        .then(() => {
+          console.log("Login successful, redirecting to /repo");
+          navigate("/repo", { replace: true });
+        })
+        .catch((error) => {
+          console.error("Login failed:", error);
+          navigate("/login", { 
+            replace: true,
+            state: { error: error.message || "Login failed" }
+          });
+        });
     } else {
-      navigate("/login");
+      console.log("No code found in URL, redirecting to login");
+      navigate("/login", { replace: true });
     }
-  }, [dispatch, navigate]);
+  }, [dispatch, navigate, searchParams]);
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-red-400">Error: {error}</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black via-black to-gray-950 text-white">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00fff0] mx-auto mb-4"></div>
-        <p>Completing authentication...</p>
-      </div>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-white">Processing login...</div>
     </div>
   );
 }

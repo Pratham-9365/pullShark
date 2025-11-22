@@ -7,15 +7,26 @@ export const checkAuthStatusThunk = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await checkAuthStatus();
-      console.log("Auth status response:", response); // Debug log
+      console.log("Auth status response:", response);
       
-      if (response.success && response.authenticated) {
-        return response.data; // Return user data
+      if (response.success) {
+        // If authenticated but no user data, we're still authenticated
+        return {
+          authenticated: true,
+          user: response.data || null // Handle case where data might be undefined
+        };
       }
-      throw new Error(response.message || "Not authenticated");
+      // If not authenticated, return false
+      return {
+        authenticated: false,
+        user: null
+      };
     } catch (error) {
-      console.log("Auth status error:", error); // Debug log
-      return rejectWithValue(error.response?.data || { message: "Not authenticated" });
+      console.log("Auth status error:", error);
+      // Even if there's an error, we consider not authenticated
+      return rejectWithValue({ 
+        message: error.response?.data?.message || "Failed to check authentication status" 
+      });
     }
   }
 );
@@ -26,15 +37,20 @@ export const exchangeCodeThunk = createAsyncThunk(
   async (code, { rejectWithValue }) => {
     try {
       const response = await exchangeCodeForSession(code);
-      console.log("Exchange code response:", response); // Debug log
+      console.log("Exchange code response:", response);
       
       if (response.success) {
-        return response.data; // Return user data
+        return {
+          authenticated: true,
+          user: response.data // This should have user data from login
+        };
       }
       throw new Error(response.message || "Login failed");
     } catch (error) {
-      console.log("Exchange code error:", error); // Debug log
-      return rejectWithValue(error.response?.data || { message: "Login failed" });
+      console.log("Exchange code error:", error);
+      return rejectWithValue({ 
+        message: error.response?.data?.message || "Login failed" 
+      });
     }
   }
 );
@@ -47,7 +63,9 @@ export const logoutThunk = createAsyncThunk(
       const response = await logout();
       return response;
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: "Logout failed" });
+      return rejectWithValue({ 
+        message: error.response?.data?.message || "Logout failed" 
+      });
     }
   }
 );
@@ -68,10 +86,9 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
-    setAuthState: (state, action) => {
-      state.authenticated = action.payload.authenticated;
-      state.user = action.payload.user;
-      state.authChecked = true;
+    // Add a manual setter for testing
+    setUser: (state, action) => {
+      state.user = action.payload;
     }
   },
   extraReducers: (builder) => {
@@ -79,11 +96,12 @@ const authSlice = createSlice({
       // checkAuthStatus
       .addCase(checkAuthStatusThunk.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(checkAuthStatusThunk.fulfilled, (state, action) => {
         state.loading = false;
-        state.authenticated = true;
-        state.user = action.payload;
+        state.authenticated = action.payload.authenticated;
+        state.user = action.payload.user; // This might be null, which is fine
         state.authChecked = true;
         state.error = null;
       })
@@ -92,7 +110,7 @@ const authSlice = createSlice({
         state.authenticated = false;
         state.user = null;
         state.authChecked = true;
-        state.error = action.payload?.message || null;
+        state.error = action.payload?.message || "Failed to check authentication";
       })
 
       // exchangeCode
@@ -102,8 +120,8 @@ const authSlice = createSlice({
       })
       .addCase(exchangeCodeThunk.fulfilled, (state, action) => {
         state.loading = false;
-        state.authenticated = true;
-        state.user = action.payload;
+        state.authenticated = action.payload.authenticated;
+        state.user = action.payload.user; // This should have user data
         state.authChecked = true;
       })
       .addCase(exchangeCodeThunk.rejected, (state, action) => {
@@ -123,17 +141,19 @@ const authSlice = createSlice({
         state.authenticated = false;
         state.user = null;
         state.authChecked = true;
+        state.error = null;
       })
-      .addCase(logoutThunk.rejected, (state) => {
+      .addCase(logoutThunk.rejected, (state, action) => {
         state.loading = false;
         state.authenticated = false;
         state.user = null;
         state.authChecked = true;
+        state.error = action.payload?.message || "Logout failed";
       });
   },
 });
 
-export const { startGithubLoginAction, clearError, setAuthState } = authSlice.actions;
+export const { startGithubLoginAction, clearError, setUser } = authSlice.actions;
 export default authSlice.reducer;
 
 

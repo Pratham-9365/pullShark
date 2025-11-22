@@ -28,6 +28,13 @@ function Header() {
   // Debug log to see header state
   console.log("Header - authenticated:", authenticated, "user:", user);
 
+  // Safe user data with fallbacks
+  const safeUser = {
+    username: user?.username || 'User',
+    email: user?.email || '',
+    avatarUrl: user?.avatarUrl || `https://ui-avatars.com/api/?name=${user?.username || 'User'}&background=00fff0&color=000`
+  };
+
   return (
     <header className="sticky top-0 z-50 backdrop-blur-md bg-black/30 border-b border-white/5">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 flex items-center justify-between h-16">
@@ -54,27 +61,29 @@ function Header() {
         </nav>
 
         <div className="flex items-center gap-4">
-          {authenticated && user ? (
+          {authenticated ? ( // Changed condition: only check authenticated, not user
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="flex items-center gap-3 p-1 rounded-lg hover:bg-white/5 transition"
               >
                 <img
-                  src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.username}&background=00fff0&color=000`}
-                  alt={user.username}
+                  src={safeUser.avatarUrl}
+                  alt={safeUser.username}
                   className="w-8 h-8 rounded-full border-2 border-[#00fff0]/50"
                 />
                 <span className="text-white/80 text-sm hidden sm:block">
-                  {user.username}
+                  {safeUser.username}
                 </span>
               </button>
 
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-black/90 backdrop-blur-md border border-white/10 rounded-lg py-2 z-50">
                   <div className="px-4 py-2 border-b border-white/10">
-                    <p className="text-white/90 text-sm font-medium">{user.username}</p>
-                    <p className="text-white/60 text-xs truncate">{user.email}</p>
+                    <p className="text-white/90 text-sm font-medium">{safeUser.username}</p>
+                    {safeUser.email && ( // Only show email if available
+                      <p className="text-white/60 text-xs truncate">{safeUser.email}</p>
+                    )}
                   </div>
                   
                   <Link 
@@ -107,4 +116,4 @@ function Header() {
   )
 }
 
-export default Header;
+export default Header
