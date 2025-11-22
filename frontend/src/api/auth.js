@@ -1,27 +1,37 @@
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+// Get base URL from Vite environment variables
+const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
+// Create axios instance with credentials
 export const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: baseURL,
   withCredentials: true,
 });
 
 // Start GitHub OAuth flow
 export function startGithubLogin() {
-  window.location.href = `${API_BASE_URL}/auth/redirect`;
+  window.location.href = `${baseURL}/auth/redirect`;
 }
 
-// Exchange GitHub code for session
+// Exchange code for session
 export async function exchangeCodeForSession(code) {
   const { data } = await api.get(`/auth/exchange/${code}`);
   return data;
 }
 
-// Check current session
+// Check authentication status
 export async function checkAuthStatus() {
-  const { data } = await api.get("/auth/status");
-  return data;
+  try {
+    const { data } = await api.get("/auth/status");
+    return data;
+  } catch (error) {
+    // If we get a 401, it means not authenticated, which is fine
+    if (error.response?.status === 401) {
+      return { success: false, authenticated: false, message: "Not authenticated" };
+    }
+    throw error;
+  }
 }
 
 // Logout
