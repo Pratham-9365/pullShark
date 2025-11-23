@@ -1,41 +1,31 @@
 import axios from "axios";
 
-// Get base URL from Vite environment variables
-const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
-
-// Create axios instance with credentials
 export const api = axios.create({
-  baseURL: baseURL,
-  withCredentials: true,
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  withCredentials: true, // send/receive cookies
 });
 
-// Start GitHub OAuth flow
+// 1) Start GitHub login (redirects the browser)
 export function startGithubLogin() {
-  window.location.href = `${baseURL}/auth/redirect`;
+  window.location.href = `${api.defaults.baseURL}/auth/redirect`;
 }
 
-// Exchange code for session
+// 2) Handle GitHub OAuth callback: /auth/callback?code=...
 export async function exchangeCodeForSession(code) {
   const { data } = await api.get(`/auth/exchange/${code}`);
+  // -> { success, message, data: { username, email, userId } }
   return data;
 }
 
-// Check authentication status
-export async function checkAuthStatus() {
-  try {
-    const { data } = await api.get("/auth/status");
-    return data;
-  } catch (error) {
-    // If we get a 401, it means not authenticated, which is fine
-    if (error.response?.status === 401) {
-      return { success: false, authenticated: false, message: "Not authenticated" };
-    }
-    throw error;
-  }
-}
+// 3) Check current session
+export const checkAuthStatus = async () => {
+  const res = await api.get("/auth/status", { withCredentials: true });
+  return res.data;
+};
 
-// Logout
+// 4) Logout
 export async function logout() {
   const { data } = await api.get("/auth/logout");
+  // -> { success: true, message: "Logged out successfully" }
   return data;
 }

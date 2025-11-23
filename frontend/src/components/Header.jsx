@@ -21,23 +21,33 @@ function Header() {
   }, []);
 
   const handleLogout = () => {
-    dispatch(logoutThunk());
-    setIsDropdownOpen(false);
+  dispatch(logoutThunk()).then(() => {
+    navigate("/");
+  });
+};
+
+  // Safe initials extraction
+  const getInitials = () => {
+    if (!user?.username) return "U"; // user is null or username missing
+    const name = user.username.trim();
+    if (!name) return "U";
+
+    const parts = name.split(" ");
+
+    if (parts.length === 1) {
+      return parts[0][0].toUpperCase();
+    }
+
+    return (parts[0][0] + parts[1][0]).toUpperCase();
   };
 
-  // Debug log to see header state
-  console.log("Header - authenticated:", authenticated, "user:", user);
-
-  // Safe user data with fallbacks
-  const safeUser = {
-    username: user?.username || 'User',
-    email: user?.email || '',
-    avatarUrl: user?.avatarUrl || `https://ui-avatars.com/api/?name=${user?.username || 'User'}&background=00fff0&color=000`
-  };
+  const initials = getInitials();
 
   return (
     <header className="sticky top-0 z-50 backdrop-blur-md bg-black/30 border-b border-white/5">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 flex items-center justify-between h-16">
+        
+        {/* LEFT LOGO */}
         <div className="flex items-center gap-4">
           <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#0ee7d6]/50 to-[#ff48e6]/30 flex items-center justify-center">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -52,6 +62,7 @@ function Header() {
           <span className="font-mono text-sm text-white/90">PullShark AI</span>
         </div>
 
+        {/* NAV LINKS */}
         <nav className="hidden md:flex items-center gap-6 text-sm text-white/60">
           <Link to="/#hero">Home</Link>
           <Link to="/#features">Features</Link>
@@ -60,40 +71,54 @@ function Header() {
           <Link to="/#contact">Contact</Link>
         </nav>
 
+        {/* RIGHT SIDE CONTENT */}
         <div className="flex items-center gap-4">
-          {authenticated ? ( // Changed condition: only check authenticated, not user
+          {!authenticated ? (
+            // ---------------- NOT LOGGED IN ----------------
+            <Link to="/login">
+              <button className="px-4 py-2 rounded-md bg-gradient-to-r from-[#00fff0] to-[#8b2fff] text-black font-semibold hover:opacity-90 transition">
+                Get Started
+              </button>
+            </Link>
+          ) : (
+            // ---------------- LOGGED IN ----------------
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="flex items-center gap-3 p-1 rounded-lg hover:bg-white/5 transition"
               >
-                <img
-                  src={safeUser.avatarUrl}
-                  alt={safeUser.username}
-                  className="w-8 h-8 rounded-full border-2 border-[#00fff0]/50"
-                />
+                {/* INITIALS CIRCLE */}
+                <div className="w-8 h-8 rounded-full bg-white/20 border-2 border-[#00fff0]/50 flex items-center justify-center text-white font-semibold">
+                  {initials}
+                </div>
+
+                {/* Username */}
                 <span className="text-white/80 text-sm hidden sm:block">
-                  {safeUser.username}
+                  {user?.username || "User"}
                 </span>
               </button>
 
+              {/* DROPDOWN */}
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-black/90 backdrop-blur-md border border-white/10 rounded-lg py-2 z-50">
                   <div className="px-4 py-2 border-b border-white/10">
-                    <p className="text-white/90 text-sm font-medium">{safeUser.username}</p>
-                    {safeUser.email && ( // Only show email if available
-                      <p className="text-white/60 text-xs truncate">{safeUser.email}</p>
+                    <p className="text-white/90 text-sm font-medium">
+                      {user?.username || "User"}
+                    </p>
+
+                    {user?.email && (
+                      <p className="text-white/60 text-xs truncate">{user.email}</p>
                     )}
                   </div>
-                  
-                  <Link 
-                    to="/repo" 
+
+                  <Link
+                    to="/repo"
                     className="block px-4 py-2 text-sm text-white/80 hover:bg-white/5 transition"
                     onClick={() => setIsDropdownOpen(false)}
                   >
                     My Repositories
                   </Link>
-                  
+
                   <button
                     onClick={handleLogout}
                     className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 transition"
@@ -103,17 +128,11 @@ function Header() {
                 </div>
               )}
             </div>
-          ) : (
-            <Link to="/login">
-              <button className="px-4 py-2 rounded-md bg-gradient-to-r from-[#00fff0] to-[#8b2fff] text-black font-semibold hover:opacity-90 transition">
-                Get Started
-              </button>
-            </Link>
           )}
         </div>
       </div>
     </header>
-  )
+  );
 }
 
-export default Header
+export default Header;
