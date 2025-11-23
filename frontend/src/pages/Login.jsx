@@ -1,9 +1,30 @@
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { startGithubLoginAction } from "../slice/authSlice";
-import { Link } from "react-router-dom";
+import { startGithubLoginAction, exchangeCodeThunk } from "../slice/authSlice";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 
 export default function LoginPanel() {
   const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  const code = searchParams.get("code");
+  const authenticated = useSelector((s) => s.auth.authenticated);
+
+  useEffect(() => {
+    if (code) {
+      dispatch(exchangeCodeThunk(code)).unwrap().catch(() => navigate("/login"));
+    }
+  }, [code]);
+
+  
+  useEffect(() => {
+    if (authenticated) {
+      // remove ?code from URL
+      window.history.replaceState({}, "", "/");
+      navigate("/");
+    }
+  }, [authenticated]);
 
   return (
     <section className="min-h-screen flex items-center justify-center bg-black text-white px-4">
@@ -13,7 +34,6 @@ export default function LoginPanel() {
           Log In
         </h2>
 
-        {/* LOGIN BUTTON */}
         <button
           onClick={() => dispatch(startGithubLoginAction())}
           className="w-full px-5 py-3 rounded-md bg-white text-black font-semibold flex items-center justify-center gap-3"

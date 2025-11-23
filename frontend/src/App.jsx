@@ -16,10 +16,6 @@ function App() {
   const [appLoading, setAppLoading] = useState(true);
 
 
-  useEffect(() => {
-    // Check auth status when app loads
-    dispatch(checkAuthStatusThunk());
-  }, [dispatch]);
 
   // Show loading until auth check is complete
   // if (appLoading) {
@@ -41,6 +37,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<Login />} /> 
           <Route path="/signup" element={<Signup />} />
           <Route path="/repo" element={<RepoPage />} />
           <Route path="/auth/callback" element={<AuthCallback />} />

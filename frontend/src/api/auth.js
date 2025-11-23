@@ -6,8 +6,8 @@ export const api = axios.create({
 });
 
 // 1) Start GitHub login (redirects the browser)
-export function startGithubLogin() {
-  window.location.href = `${api.defaults.baseURL}/auth/redirect`;
+export async function startGithubLogin() {
+  await api.get("/auth/redirect");
 }
 
 // 2) Handle GitHub OAuth callback: /auth/callback?code=...
