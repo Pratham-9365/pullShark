@@ -8,7 +8,6 @@ export default function AuthCallback() {
 
   useEffect(() => {
     const code = searchParams.get("code");
-
     if (code) {
       console.log("Exchanging code:", code);
 
