@@ -16,7 +16,13 @@ function App() {
   const [appLoading, setAppLoading] = useState(true);
 
 
-
+  useEffect(() => {
+    const init = async () => {
+      dispatch(checkAuthStatusThunk());
+      setAppLoading(false);
+    };
+    init();
+  }, []);
   // Show loading until auth check is complete
   // if (appLoading) {
   //   return (

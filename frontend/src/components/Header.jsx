@@ -1,11 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react'
-import { Link } from "react-router";
+import React, { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate } from "react-router";
 import { useSelector, useDispatch } from "react-redux";
 import { logoutThunk } from "../slice/authSlice";
 
 function Header() {
-  const { authenticated, user } = useSelector((state) => state.auth);
+  const { loading, user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -21,14 +23,14 @@ function Header() {
   }, []);
 
   const handleLogout = () => {
-  dispatch(logoutThunk()).then(() => {
-    navigate("/");
-  });
-};
+    dispatch(logoutThunk()).then(() => {
+      navigate("/");
+    });
+  };
 
   // Safe initials extraction
   const getInitials = () => {
-    if (!user?.username) return "U"; // user is null or username missing
+    if (!user?.username) return "U";
     const name = user.username.trim();
     if (!name) return "U";
 
@@ -43,10 +45,15 @@ function Header() {
 
   const initials = getInitials();
 
+  // 🔥 Avatar Shimmer Component
+  const AvatarShimmer = () => (
+    <div className="w-8 h-8 rounded-full bg-white/10 animate-pulse" />
+  );
+
   return (
     <header className="sticky top-0 z-50 backdrop-blur-md bg-black/30 border-b border-white/5">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 flex items-center justify-between h-16">
-        
+
         {/* LEFT LOGO */}
         <div className="flex items-center gap-4">
           <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#0ee7d6]/50 to-[#ff48e6]/30 flex items-center justify-center">
@@ -73,49 +80,61 @@ function Header() {
 
         {/* RIGHT SIDE CONTENT */}
         <div className="flex items-center gap-4">
-          {!authenticated ? (
-            // ---------------- NOT LOGGED IN ----------------
+
+          {/* 🔹 1. SHOW SHIMMER WHILE AUTH LOADING */}
+          {loading && (
+            <div className="flex items-center gap-3">
+              <AvatarShimmer />
+              <div className="w-20 h-4 bg-white/10 rounded animate-pulse hidden sm:block"></div>
+            </div>
+          )}
+
+          {/* 🔹 2. NOT LOGGED IN */}
+          {!loading && !user && (
             <Link to="/login">
               <button className="px-4 py-2 rounded-md bg-gradient-to-r from-[#00fff0] to-[#8b2fff] text-black font-semibold hover:opacity-90 transition">
                 Get Started
               </button>
             </Link>
-          ) : (
-            // ---------------- LOGGED IN ----------------
+          )}
+
+          {/* 🔹 3. LOGGED IN */}
+          {!loading && user && (
             <div className="relative" ref={dropdownRef}>
               <button
-  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-  className="flex items-center gap-3 p-1 rounded-lg hover:bg-white/5 transition"
->
-  {/* Avatar OR Initials */}
-  {user?.avatarUrl ? (
-    <img
-      src={user.avatarUrl}
-      alt="avatar"
-      className="w-8 h-8 rounded-full border-2 border-[#00fff0]/50 object-cover"
-    />
-  ) : (
-    <div className="w-8 h-8 rounded-full bg-white/20 border-2 border-[#00fff0]/50 flex items-center justify-center text-white font-semibold">
-      {initials}
-    </div>
-  )}
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-3 p-1 rounded-lg hover:bg-white/5 transition"
+              >
+                {/* Avatar OR Initials */}
+                {user?.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt="avatar"
+                    className="w-8 h-8 rounded-full border-2 border-[#00fff0]/50 object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-white/20 border-2 border-[#00fff0]/50 flex items-center justify-center text-white font-semibold">
+                    {initials}
+                  </div>
+                )}
 
-  {/* Username */}
-  <span className="text-white/80 text-sm hidden sm:block">
-    {user?.username || "User"}
-  </span>
-</button>
+                {/* Username */}
+                <span className="text-white/80 text-sm hidden sm:block">
+                  {user?.username || "User"}
+                </span>
+              </button>
 
               {/* DROPDOWN */}
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-black/90 backdrop-blur-md border border-white/10 rounded-lg py-2 z-50">
                   <div className="px-4 py-2 border-b border-white/10">
                     <p className="text-white/90 text-sm font-medium">
-                      {user?.username || "User"}
+                      {user?.username}
                     </p>
-
                     {user?.email && (
-                      <p className="text-white/60 text-xs truncate">{user.email}</p>
+                      <p className="text-white/60 text-xs truncate">
+                        {user.email}
+                      </p>
                     )}
                   </div>
 
