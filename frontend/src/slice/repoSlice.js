@@ -1,6 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { api } from "../api/auth";
 
+// ======================================================
+// FETCH THUNK
+// ======================================================
 export const fetchReposThunk = createAsyncThunk(
   "repos/fetch",
   async ({ page = 1, limit = 10 }, { rejectWithValue }) => {
@@ -8,15 +11,21 @@ export const fetchReposThunk = createAsyncThunk(
       const res = await api.get(`/auth/repos?page=${page}&limit=${limit}`, {
         withCredentials: true,
       });
-      return res.data;  // { success, repos, pagination }
+      return res.data; // { success, repos, pagination }
     } catch (err) {
-      return rejectWithValue(err.response?.data || { message: "Failed to fetch repos" });
+      return rejectWithValue(
+        err.response?.data || { message: "Failed to fetch repos" }
+      );
     }
   }
 );
 
+// ======================================================
+// SLICE
+// ======================================================
 const repoSlice = createSlice({
   name: "repos",
+
   initialState: {
     repos: [],
     loading: false,
@@ -36,24 +45,39 @@ const repoSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
+      // --------------------
+      // PENDING
+      // --------------------
+      .addCase(fetchReposThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+
+      // --------------------
+      // SUCCESS
+      // --------------------
       .addCase(fetchReposThunk.fulfilled, (state, action) => {
-  state.loading = false;
+        state.loading = false;
 
-  // Update repos only when changed
-  state.repos = action.payload.repos || [];
+        // Update repo list
+        state.repos = action.payload.repos || [];
 
-  // Mutate existing pagination object (do NOT replace it)
-  const p = action.payload.pagination || {};
-  state.pagination.page = p.page ?? state.pagination.page;
-  state.pagination.hasNextPage = p.hasNextPage ?? state.pagination.hasNextPage;
-  state.pagination.hasPrevPage = p.hasPrevPage ?? state.pagination.hasPrevPage;
-})
+        // Replace pagination completely to avoid stale values
+        const p = action.payload.pagination || {};
+        state.pagination = {
+          page: p.page ?? 1,
+          hasNextPage: p.hasNextPage ?? false,
+          hasPrevPage: p.hasPrevPage ?? false,
+        };
+      })
 
-.addCase(fetchReposThunk.rejected, (state, action) => {
-  state.loading = false;
-  state.error = action.payload?.message || "Failed to fetch repos";
-  // DO NOT replace repos or pagination
-});
+      // --------------------
+      // ERROR
+      // --------------------
+      .addCase(fetchReposThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || "Failed to fetch repos";
+      });
   },
 });
 
