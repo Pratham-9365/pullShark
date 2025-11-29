@@ -55,7 +55,7 @@ const authSlice = createSlice({
 
   reducers: {
     startGithubLoginAction: () => {
-      const base = import.meta.env.VITE_API_BASE_URL;
+      const base = `${import.meta.env.VITE_API_BASE_URL}${import.meta.env.VITE_API_URL}`;
       window.location.href = `${base}/auth/redirect`;
     },
   },

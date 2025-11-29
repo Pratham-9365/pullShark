@@ -1,9 +1,13 @@
 import axios from "axios";
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  withCredentials: true, // send/receive cookies
+  baseURL: `${import.meta.env.VITE_API_BASE_URL}${import.meta.env.VITE_API_URL}`,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json"
+  }
 });
+
 
 // 1) Start GitHub login (redirects the browser)
 export async function startGithubLogin() {

@@ -1,7 +1,7 @@
 import getDecryptedGithubToken from "../../utils/decryptGithubToken.js";
 import axios from "axios";
 import { encode } from "@toon-format/toon";
-import cleanDiff from "../../utils/cleanDIff.js";
+import cleanDiff from "../../utils/cleandiff.js";
 import compressForLLM from "../../utils/compressllm.js";
 import prioritizeFiles from "../../utils/smartfile.js";
 

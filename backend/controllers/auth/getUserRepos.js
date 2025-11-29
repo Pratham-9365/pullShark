@@ -15,9 +15,8 @@ export default async function getUserRepos(req, res) {
 
     const payload = await getDecryptedGithubToken(accessToken);
 
-    // Use pagination middleware values if present, otherwise fall back
-    const per_page = (req.pagination && req.pagination.limit) ? req.pagination.limit : 5;
-    const page = (req.pagination && req.pagination.page) ? req.pagination.page : 1;
+    const per_page = req.pagination?.limit || 5;
+    const page = req.pagination?.page || 1;
 
     const response = await axios.get("https://api.github.com/user/repos", {
       headers: { Authorization: `token ${payload.ghAccessToken}` },
@@ -25,6 +24,11 @@ export default async function getUserRepos(req, res) {
     });
 
     const repos = response.data || [];
+
+    // ⬇️⬇️ NEW: GitHub pagination detection
+    const link = response.headers.link || "";
+    const hasNextPage = link.includes('rel="next"');
+    const hasPrevPage = link.includes('rel="prev"');
 
     const filtered = repos.map(repo => ({
       id: repo.id,
@@ -50,7 +54,16 @@ export default async function getUserRepos(req, res) {
       language: repo.language
     }));
 
-    return res.json({ success: true, repos: filtered, pagination: req.pagination || { limit: per_page, page } });
+    return res.json({
+      success: true,
+      repos: filtered,
+      pagination: {
+        page,
+        limit: per_page,
+        hasNextPage,
+        hasPrevPage
+      }
+    });
 
   } catch (err) {
     console.error("getUserRepos error:", err.message);
