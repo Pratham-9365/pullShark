@@ -1,12 +1,13 @@
 import axios from "axios";
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000',
-    withCredentials: true,
-    headers: {
-        'Content-Type': 'application/json'
-    }
-})
+  baseURL: `${import.meta.env.VITE_API_BASE_URL}${import.meta.env.VITE_API_URL}`,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json"
+  }
+});
+
 
 // 1) Start GitHub login (redirects the browser)
 export async function startGithubLogin() {
@@ -32,3 +33,5 @@ export async function logout() {
   // -> { success: true, message: "Logged out successfully" }
   return data;
 }
+
+ab chalega ??
